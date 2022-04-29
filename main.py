@@ -23,7 +23,7 @@ def load_user(user_id):
 
 
 # app.config['SQLALCHEMY_DATABASE_URL']='mysql://username:password@localhost/databas_table_name'
-app.config['SQLALCHEMY_DATABASE_URI']='mysql://root:@localhost/students'
+app.config['SQLALCHEMY_DATABASE_URI']='mysql://root:@localhost/Students'
 db=SQLAlchemy(app)
 
 # here we will create db models that is tables
@@ -40,6 +40,11 @@ class Attendence(db.Model):
     aid=db.Column(db.Integer,primary_key=True)
     rollno=db.Column(db.String(100))
     attendance=db.Column(db.Integer())
+
+class Grades(db.Model):
+    gid=db.Column(db.Integer,primary_key=True)
+    rollno=db.Column(db.String(100))
+    grades=db.Column(db.Integer())
 
 class Trig(db.Model):
     tid=db.Column(db.Integer,primary_key=True)
@@ -113,13 +118,29 @@ def addattendance():
         
     return render_template('attendance.html',query=query)
 
+@app.route('/addgrades',methods=['POST','GET'])
+def addgrades():
+    query=db.engine.execute(f"SELECT * FROM `student`") 
+    if request.method=="POST":
+        rollno=request.form.get('rollno')
+        grade=request.form.get('grade')
+        print(grade,rollno)
+        gr=Grades(rollno=rollno,grades=grade)
+        db.session.add(gr)
+        db.session.commit()
+        flash("Grade added","warning")
+
+        
+    return render_template('grades.html',query=query)
+
 @app.route('/search',methods=['POST','GET'])
 def search():
     if request.method=="POST":
         rollno=request.form.get('roll')
         bio=Student.query.filter_by(rollno=rollno).first()
         attend=Attendence.query.filter_by(rollno=rollno).first()
-        return render_template('search.html',bio=bio,attend=attend)
+        grade=Grades.query.filter_by(rollno=rollno).first()
+        return render_template('search.html',bio=bio,attend=attend,grade=grade)
         
     return render_template('search.html')
 
